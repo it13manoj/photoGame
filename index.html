@@ -1,854 +1,1043 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>📸 Photo Studio · selfie, text, stickers</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎭 Face Studio · real-time filters & effects</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      background: #1a1512;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      padding: 0.6rem;
-      margin: 0;
-    }
+        body {
+            background: #1a1512;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 0.6rem;
+            margin: 0;
+        }
 
-    .app-container {
-      max-width: 480px;
-      width: 100%;
-      background: #2d2722;
-      border-radius: 48px;
-      padding: 1rem 1rem 1.2rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 0 2px #4d3f35;
-    }
+        .app-container {
+            max-width: 480px;
+            width: 100%;
+            background: #2d2722;
+            border-radius: 48px;
+            padding: 1rem 1rem 1.2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 0 2px #4d3f35;
+        }
 
-    h1 {
-      font-size: 1.6rem;
-      font-weight: 600;
-      color: #f2e3d0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      margin-bottom: 0.6rem;
-      letter-spacing: -0.3px;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
-    h1 span {
-      background: #4d3f35;
-      padding: 0.1rem 0.8rem;
-      border-radius: 40px;
-      font-size: 0.9rem;
-    }
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #f2e3d0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.3px;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        h1 span {
+            background: #4d3f35;
+            padding: 0.1rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+        }
 
-    .camera-box {
-      background: #0d0a08;
-      border-radius: 28px;
-      overflow: hidden;
-      position: relative;
-      aspect-ratio: 4 / 3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 3px solid #4f3f33;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.7);
-      margin-bottom: 0.8rem;
-    }
+        .camera-box {
+            background: #0d0a08;
+            border-radius: 28px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 4 / 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #4f3f33;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.7);
+            margin-bottom: 0.8rem;
+        }
 
-    #video, #photoCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+        #video, #photoCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
 
-    #photoCanvas {
-      z-index: 10;
-      pointer-events: none;
-      display: none;
-    }
+        #photoCanvas {
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+        }
 
-    .camera-box .placeholder {
-      color: #5f4d3d;
-      font-size: 1rem;
-      background: #1f1813;
-      padding: 0.6rem 1.4rem;
-      border-radius: 60px;
-      border: 2px dashed #4f3f33;
-      z-index: 1;
-      text-align: center;
-    }
+        .camera-box .placeholder {
+            color: #5f4d3d;
+            font-size: 1rem;
+            background: #1f1813;
+            padding: 0.6rem 1.4rem;
+            border-radius: 60px;
+            border: 2px dashed #4f3f33;
+            z-index: 1;
+            text-align: center;
+        }
 
-    /* overlay layers */
-    .sticker-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 20;
-      pointer-events: none;
-    }
-    .sticker-layer img {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
-      transition: all 0.1s;
-      user-select: none;
-      pointer-events: auto;
-      cursor: grab;
-      border-radius: 14px;
-      background: rgba(0,0,0,0.25);
-      backdrop-filter: blur(2px);
-      padding: 4px;
-    }
-    .sticker-layer img:active {
-      cursor: grabbing;
-    }
+        /* overlay layers */
+        .sticker-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .sticker-layer img {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+            transition: all 0.1s;
+            user-select: none;
+            pointer-events: auto;
+            cursor: grab;
+            border-radius: 14px;
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(2px);
+            padding: 4px;
+        }
+        .sticker-layer img:active {
+            cursor: grabbing;
+        }
 
-    .text-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 15;
-      pointer-events: none;
-    }
-    .text-overlay div {
-      position: absolute;
-      color: white;
-      font-size: 28px;
-      font-weight: 700;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
-      pointer-events: auto;
-      cursor: grab;
-      padding: 4px 10px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 12px;
-      backdrop-filter: blur(2px);
-      border: 1px solid rgba(255,255,255,0.15);
-      user-select: none;
-      font-family: 'Segoe UI', 'Quicksand', sans-serif;
-      letter-spacing: 0.5px;
-      line-height: 1.2;
-      max-width: 90%;
-      word-break: break-word;
-    }
-    .text-overlay div:active {
-      cursor: grabbing;
-    }
+        .text-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+        .text-overlay div {
+            position: absolute;
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
+            pointer-events: auto;
+            cursor: grab;
+            padding: 4px 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255,255,255,0.15);
+            user-select: none;
+            font-family: 'Segoe UI', 'Quicksand', sans-serif;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            max-width: 90%;
+            word-break: break-word;
+        }
+        .text-overlay div:active {
+            cursor: grabbing;
+        }
 
-    /* toolbar */
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      margin-bottom: 0.6rem;
-      background: #3b322b;
-      padding: 0.4rem 0.6rem;
-      border-radius: 50px;
-      border: 2px solid #5a4b3e;
-    }
+        /* face filter overlay */
+        .face-filter-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 12;
+            pointer-events: none;
+        }
+        .face-filter-layer canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
 
-    .toolbar button, .toolbar label {
-      background: #524138;
-      border: none;
-      border-radius: 40px;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #f2e3d0;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.2rem;
-      cursor: pointer;
-      border: 2px solid #6b5a4c;
-      box-shadow: 0 3px 0 #2d211b;
-      transition: all 0.05s linear;
-      flex-shrink: 0;
-    }
-    .toolbar button:active, .toolbar label:active {
-      transform: translateY(3px);
-      box-shadow: 0 0px 0 #2d211b;
-    }
-    .toolbar button.primary {
-      background: #b5855a;
-      border-color: #dbaa7a;
-      color: #1f1610;
-      box-shadow: 0 3px 0 #7a5b3f;
-    }
-    .toolbar button.danger {
-      background: #a8534a;
-      border-color: #cf6f64;
-      color: #1f1610;
-      box-shadow: 0 3px 0 #713b34;
-    }
-    .toolbar input[type="file"] {
-      display: none;
-    }
-    .toolbar .spacer {
-      width: 4px;
-    }
+        /* toolbar */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-bottom: 0.6rem;
+            background: #3b322b;
+            padding: 0.4rem 0.6rem;
+            border-radius: 50px;
+            border: 2px solid #5a4b3e;
+        }
 
-    .filter-group {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 0.2rem;
-      background: #2d241e;
-      padding: 0.2rem 0.4rem;
-      border-radius: 30px;
-      border: 2px solid #4f3f33;
-    }
-    .filter-btn {
-      background: transparent;
-      border: 2px solid transparent;
-      border-radius: 30px;
-      padding: 0.1rem 0.5rem;
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: #cbb7a3;
-      cursor: pointer;
-      transition: all 0.1s;
-    }
-    .filter-btn.active {
-      background: #b5855a;
-      border-color: #eac39c;
-      color: #1f1610;
-    }
+        .toolbar button,
+        .toolbar label {
+            background: #524138;
+            border: none;
+            border-radius: 40px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #f2e3d0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            cursor: pointer;
+            border: 2px solid #6b5a4c;
+            box-shadow: 0 3px 0 #2d211b;
+            transition: all 0.05s linear;
+            flex-shrink: 0;
+        }
+        .toolbar button:active,
+        .toolbar label:active {
+            transform: translateY(3px);
+            box-shadow: 0 0px 0 #2d211b;
+        }
+        .toolbar button.primary {
+            background: #b5855a;
+            border-color: #dbaa7a;
+            color: #1f1610;
+            box-shadow: 0 3px 0 #7a5b3f;
+        }
+        .toolbar button.danger {
+            background: #a8534a;
+            border-color: #cf6f64;
+            color: #1f1610;
+            box-shadow: 0 3px 0 #713b34;
+        }
+        .toolbar input[type="file"] {
+            display: none;
+        }
 
-    .sticker-picker {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.2rem;
-      justify-content: center;
-      margin-bottom: 0.5rem;
-      background: #332a23;
-      padding: 0.3rem 0.4rem;
-      border-radius: 50px;
-      border: 2px solid #4f3f33;
-    }
-    .sticker-picker span {
-      font-size: 1.8rem;
-      cursor: pointer;
-      padding: 0 0.15rem;
-      transition: transform 0.1s;
-      line-height: 1;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-      user-select: none;
-    }
-    .sticker-picker span:active {
-      transform: scale(0.8);
-    }
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            background: #2d241e;
+            padding: 0.2rem 0.4rem;
+            border-radius: 30px;
+            border: 2px solid #4f3f33;
+        }
+        .filter-btn {
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 30px;
+            padding: 0.1rem 0.5rem;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #cbb7a3;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .filter-btn.active {
+            background: #b5855a;
+            border-color: #eac39c;
+            color: #1f1610;
+        }
 
-    .text-input-row {
-      display: flex;
-      gap: 0.4rem;
-      margin-bottom: 0.5rem;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .text-input-row input {
-      flex: 1;
-      min-width: 120px;
-      padding: 0.4rem 0.8rem;
-      border-radius: 30px;
-      border: 2px solid #4f3f33;
-      background: #2d241e;
-      color: #f2e3d0;
-      font-size: 0.9rem;
-      outline: none;
-      font-weight: 500;
-    }
-    .text-input-row input::placeholder {
-      color: #8a7a6a;
-    }
-    .text-input-row button {
-      background: #5a4a3d;
-      border: none;
-      border-radius: 30px;
-      padding: 0.4rem 1rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #f2e3d0;
-      border: 2px solid #6b5a4c;
-      box-shadow: 0 3px 0 #2d211b;
-      cursor: pointer;
-      transition: all 0.05s;
-      white-space: nowrap;
-    }
-    .text-input-row button:active {
-      transform: translateY(3px);
-      box-shadow: 0 0px 0 #2d211b;
-    }
+        .sticker-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.2rem;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            background: #332a23;
+            padding: 0.3rem 0.4rem;
+            border-radius: 50px;
+            border: 2px solid #4f3f33;
+        }
+        .sticker-picker span {
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0 0.15rem;
+            transition: transform 0.1s;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            user-select: none;
+        }
+        .sticker-picker span:active {
+            transform: scale(0.8);
+        }
 
-    #statusMsg {
-      text-align: center;
-      color: #d6c3b0;
-      font-size: 0.8rem;
-      margin-top: 0.4rem;
-      min-height: 1.6rem;
-      padding: 0.2rem;
-      background: #2d241e;
-      border-radius: 30px;
-      border: 2px solid #4f3f33;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-    }
+        .text-input-row {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .text-input-row input {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.4rem 0.8rem;
+            border-radius: 30px;
+            border: 2px solid #4f3f33;
+            background: #2d241e;
+            color: #f2e3d0;
+            font-size: 0.9rem;
+            outline: none;
+            font-weight: 500;
+        }
+        .text-input-row input::placeholder {
+            color: #8a7a6a;
+        }
+        .text-input-row button {
+            background: #5a4a3d;
+            border: none;
+            border-radius: 30px;
+            padding: 0.4rem 1rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #f2e3d0;
+            border: 2px solid #6b5a4c;
+            box-shadow: 0 3px 0 #2d211b;
+            cursor: pointer;
+            transition: all 0.05s;
+            white-space: nowrap;
+        }
+        .text-input-row button:active {
+            transform: translateY(3px);
+            box-shadow: 0 0px 0 #2d211b;
+        }
 
-    @media (max-width: 420px) {
-      .app-container { padding: 0.6rem; }
-      .toolbar button, .toolbar label { font-size: 0.6rem; padding: 0.3rem 0.6rem; }
-      .sticker-picker span { font-size: 1.4rem; }
-      .sticker-layer img { width: 48px; height: 48px; }
-      .text-overlay div { font-size: 22px; }
-      .text-input-row input { font-size: 0.8rem; }
-    }
-  </style>
+        #statusMsg {
+            text-align: center;
+            color: #d6c3b0;
+            font-size: 0.8rem;
+            margin-top: 0.4rem;
+            min-height: 1.6rem;
+            padding: 0.2rem;
+            background: #2d241e;
+            border-radius: 30px;
+            border: 2px solid #4f3f33;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        @media (max-width: 420px) {
+            .app-container {
+                padding: 0.6rem;
+            }
+            .toolbar button,
+            .toolbar label {
+                font-size: 0.55rem;
+                padding: 0.25rem 0.5rem;
+            }
+            .sticker-picker span {
+                font-size: 1.4rem;
+            }
+            .sticker-layer img {
+                width: 48px;
+                height: 48px;
+            }
+            .text-overlay div {
+                font-size: 22px;
+            }
+            .text-input-row input {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="app-container" role="main" aria-label="Photo Studio with selfie, text & stickers">
+    <div class="app-container" role="main" aria-label="Face Studio with real-time filters & effects">
 
-  <h1>📸 photo <span>studio</span></h1>
+        <h1>🎭 face <span>studio</span></h1>
 
-  <!-- camera preview -->
-  <div class="camera-box" id="cameraBox">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="photoCanvas"></canvas>
-    <div class="placeholder" id="camPlaceholder">📷 camera ready</div>
-    <!-- sticker layer -->
-    <div class="sticker-layer" id="stickerLayer"></div>
-    <!-- text overlay -->
-    <div class="text-overlay" id="textOverlay"></div>
-  </div>
+        <!-- camera preview -->
+        <div class="camera-box" id="cameraBox">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="photoCanvas"></canvas>
+            <div class="face-filter-layer" id="faceFilterLayer">
+                <canvas id="faceFilterCanvas"></canvas>
+            </div>
+            <div class="placeholder" id="camPlaceholder">📷 camera ready</div>
+            <!-- sticker layer -->
+            <div class="sticker-layer" id="stickerLayer"></div>
+            <!-- text overlay -->
+            <div class="text-overlay" id="textOverlay"></div>
+        </div>
 
-  <!-- sticker picker -->
-  <div class="sticker-picker" id="stickerPicker">
-    <span data-sticker="🐶">🐶</span>
-    <span data-sticker="🐱">🐱</span>
-    <span data-sticker="🐼">🐼</span>
-    <span data-sticker="🦊">🦊</span>
-    <span data-sticker="🐸">🐸</span>
-    <span data-sticker="⭐">⭐</span>
-    <span data-sticker="🌈">🌈</span>
-    <span data-sticker="🍕">🍕</span>
-    <span data-sticker="🎈">🎈</span>
-    <span data-sticker="🧸">🧸</span>
-    <span data-sticker="❤️">❤️</span>
-    <span data-sticker="🔥">🔥</span>
-  </div>
+        <!-- sticker picker -->
+        <div class="sticker-picker" id="stickerPicker">
+            <span data-sticker="🐶">🐶</span>
+            <span data-sticker="🐱">🐱</span>
+            <span data-sticker="🐼">🐼</span>
+            <span data-sticker="🦊">🦊</span>
+            <span data-sticker="🐸">🐸</span>
+            <span data-sticker="⭐">⭐</span>
+            <span data-sticker="🌈">🌈</span>
+            <span data-sticker="🍕">🍕</span>
+            <span data-sticker="🎈">🎈</span>
+            <span data-sticker="🧸">🧸</span>
+            <span data-sticker="❤️">❤️</span>
+            <span data-sticker="🔥">🔥</span>
+            <span data-sticker="👑">👑</span>
+            <span data-sticker="🎃">🎃</span>
+        </div>
 
-  <!-- text input -->
-  <div class="text-input-row">
-    <input type="text" id="textInput" placeholder="✏️ write text..." maxlength="30">
-    <button id="addTextBtn">➕ add text</button>
-    <button id="clearTextBtn" class="danger" style="background:#a8534a;border-color:#cf6f64;box-shadow:0 3px 0 #713b34;">🗑️</button>
-  </div>
+        <!-- text input -->
+        <div class="text-input-row">
+            <input type="text" id="textInput" placeholder="✏️ write text..." maxlength="30">
+            <button id="addTextBtn">➕ add</button>
+            <button id="clearTextBtn" class="danger" style="background:#a8534a;border-color:#cf6f64;box-shadow:0 3px 0 #713b34;">🗑️</button>
+        </div>
 
-  <!-- toolbar -->
-  <div class="toolbar">
-    <button id="captureBtn" class="primary">📸 take</button>
-    <button id="selfieBtn" class="primary">🤳 selfie</button>
-    <label for="uploadInput" id="uploadLabel">🖼️ upload</label>
-    <input type="file" id="uploadInput" accept="image/*">
-    <button id="clearPhotoBtn" class="danger">🗑️ clear</button>
-    <button id="saveBtn" style="background:#5a7a5a;border-color:#6a9a6a;box-shadow:0 3px 0 #3a5a3a;">💾 save</button>
-    <div class="filter-group">
-      <span style="color:#cbb7a3; font-weight:500; font-size:0.6rem;">filter</span>
-      <button class="filter-btn active" data-filter="none">off</button>
-      <button class="filter-btn" data-filter="grayscale">b&w</button>
-      <button class="filter-btn" data-filter="sepia">sepia</button>
-      <button class="filter-btn" data-filter="warm">warm</button>
-      <button class="filter-btn" data-filter="cool">cool</button>
+        <!-- toolbar -->
+        <div class="toolbar">
+            <button id="captureBtn" class="primary">📸 take</button>
+            <button id="selfieBtn" class="primary">🤳 selfie</button>
+            <label for="uploadInput" id="uploadLabel">🖼️ upload</label>
+            <input type="file" id="uploadInput" accept="image/*">
+            <button id="clearPhotoBtn" class="danger">🗑️ clear</button>
+            <button id="saveBtn" style="background:#5a7a5a;border-color:#6a9a6a;box-shadow:0 3px 0 #3a5a3a;">💾 save</button>
+            <div class="filter-group">
+                <span style="color:#cbb7a3; font-weight:500; font-size:0.6rem;">filter</span>
+                <button class="filter-btn active" data-filter="none">off</button>
+                <button class="filter-btn" data-filter="grayscale">b&w</button>
+                <button class="filter-btn" data-filter="sepia">sepia</button>
+                <button class="filter-btn" data-filter="warm">warm</button>
+                <button class="filter-btn" data-filter="cool">cool</button>
+            </div>
+        </div>
+
+        <!-- face effect buttons -->
+        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;justify-content:center;margin-bottom:0.5rem;background:#332a23;padding:0.3rem;border-radius:50px;border:2px solid #4f3f33;">
+            <button class="face-effect-btn" data-effect="none" style="background:#524138;border:2px solid #6b5a4c;border-radius:30px;padding:0.2rem 0.8rem;color:#f2e3d0;font-size:0.7rem;font-weight:600;cursor:pointer;box-shadow:0 3px 0 #2d211b;">😐 off</button>
+            <button class="face-effect-btn" data-effect="sunglasses" style="background:#524138;border:2px solid #6b5a4c;border-radius:30px;padding:0.2rem 0.8rem;color:#f2e3d0;font-size:0.7rem;font-weight:600;cursor:pointer;box-shadow:0 3px 0 #2d211b;">😎 sunglasses</button>
+            <button class="face-effect-btn" data-effect="mustache" style="background:#524138;border:2px solid #6b5a4c;border-radius:30px;padding:0.2rem 0.8rem;color:#f2e3d0;font-size:0.7rem;font-weight:600;cursor:pointer;box-shadow:0 3px 0 #2d211b;">🧔 mustache</button>
+            <button class="face-effect-btn" data-effect="clown" style="background:#524138;border:2px solid #6b5a4c;border-radius:30px;padding:0.2rem 0.8rem;color:#f2e3d0;font-size:0.7rem;font-weight:600;cursor:pointer;box-shadow:0 3px 0 #2d211b;">🤡 clown</button>
+            <button class="face-effect-btn" data-effect="robot" style="background:#524138;border:2px solid #6b5a4c;border-radius:30px;padding:0.2rem 0.8rem;color:#f2e3d0;font-size:0.7rem;font-weight:600;cursor:pointer;box-shadow:0 3px 0 #2d211b;">🤖 robot</button>
+        </div>
+
+        <div id="statusMsg">📷 real-time face filters! point & shoot</div>
     </div>
-  </div>
 
-  <div id="statusMsg">📷 point & shoot · add stickers, text & filters</div>
-</div>
+    <script>
+        (function() {
+            // ----- DOM refs -----
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('photoCanvas');
+            const ctx = canvas.getContext('2d');
+            const faceFilterCanvas = document.getElementById('faceFilterCanvas');
+            const faceFilterCtx = faceFilterCanvas.getContext('2d');
+            const stickerLayer = document.getElementById('stickerLayer');
+            const textOverlay = document.getElementById('textOverlay');
+            const camPlaceholder = document.getElementById('camPlaceholder');
+            const captureBtn = document.getElementById('captureBtn');
+            const selfieBtn = document.getElementById('selfieBtn');
+            const uploadInput = document.getElementById('uploadInput');
+            const clearPhotoBtn = document.getElementById('clearPhotoBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const statusMsg = document.getElementById('statusMsg');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const stickerSpans = document.querySelectorAll('#stickerPicker span');
+            const textInput = document.getElementById('textInput');
+            const addTextBtn = document.getElementById('addTextBtn');
+            const clearTextBtn = document.getElementById('clearTextBtn');
+            const faceEffectBtns = document.querySelectorAll('.face-effect-btn');
 
-<script>
-  (function() {
-    // ----- DOM refs -----
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('photoCanvas');
-    const ctx = canvas.getContext('2d');
-    const stickerLayer = document.getElementById('stickerLayer');
-    const textOverlay = document.getElementById('textOverlay');
-    const camPlaceholder = document.getElementById('camPlaceholder');
-    const captureBtn = document.getElementById('captureBtn');
-    const selfieBtn = document.getElementById('selfieBtn');
-    const uploadInput = document.getElementById('uploadInput');
-    const clearPhotoBtn = document.getElementById('clearPhotoBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const statusMsg = document.getElementById('statusMsg');
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const stickerSpans = document.querySelectorAll('#stickerPicker span');
-    const textInput = document.getElementById('textInput');
-    const addTextBtn = document.getElementById('addTextBtn');
-    const clearTextBtn = document.getElementById('clearTextBtn');
+            // ----- state -----
+            let currentFilter = 'none';
+            let currentFaceEffect = 'none';
+            let stream = null;
+            let photoTaken = false;
+            let imageData = null;
+            let stickers = [];
+            let textElements = [];
+            let facingMode = 'environment';
+            let animationId = null;
 
-    // ----- state -----
-    let currentFilter = 'none';
-    let stream = null;
-    let photoTaken = false;
-    let imageData = null;
-    let stickers = [];
-    let textElements = [];
-    let facingMode = 'environment'; // 'environment' or 'user'
+            // ----- camera init -----
+            async function initCamera(facing = 'environment') {
+                try {
+                    if (stream) {
+                        stream.getTracks().forEach(t => t.stop());
+                    }
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 } }
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                    camPlaceholder.style.display = 'none';
+                    statusMsg.textContent = '📸 camera ready!';
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+                    faceFilterCanvas.width = video.videoWidth || 640;
+                    faceFilterCanvas.height = video.videoHeight || 480;
+                    drawVideoToCanvas();
+                    photoTaken = false;
+                    canvas.style.display = 'none';
+                    video.style.display = 'block';
+                    startFaceTracking();
+                } catch (err) {
+                    console.warn('Camera error:', err);
+                    camPlaceholder.textContent = '⚠️ camera not available · upload a photo';
+                    statusMsg.textContent = '⚠️ allow camera or upload image';
+                }
+            }
 
-    // ----- camera init -----
-    async function initCamera(facing = 'environment') {
-      try {
-        if (stream) {
-          stream.getTracks().forEach(t => t.stop());
-        }
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 } }
-        });
-        video.srcObject = stream;
-        await video.play();
-        camPlaceholder.style.display = 'none';
-        statusMsg.textContent = '📸 camera ready!';
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        drawVideoToCanvas();
-        photoTaken = false;
-        canvas.style.display = 'none';
-        video.style.display = 'block';
-      } catch (err) {
-        console.warn('Camera error:', err);
-        camPlaceholder.textContent = '⚠️ camera not available · upload a photo';
-        statusMsg.textContent = '⚠️ allow camera or upload image';
-      }
-    }
+            function drawVideoToCanvas() {
+                if (!video.videoWidth) return;
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                applyFilter(currentFilter);
+            }
 
-    function drawVideoToCanvas() {
-      if (!video.videoWidth) return;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      applyFilter(currentFilter);
-    }
+            // ----- filter engine -----
+            function applyFilter(filterName) {
+                if (!imageData) return;
+                const imgData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
+                const data = imgData.data;
+                const len = data.length;
 
-    // ----- filter engine -----
-    function applyFilter(filterName) {
-      if (!imageData) return;
-      const imgData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
-      const data = imgData.data;
-      const len = data.length;
+                switch (filterName) {
+                    case 'grayscale':
+                        for (let i = 0; i < len; i += 4) {
+                            const gray = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+                            data[i] = gray;
+                            data[i + 1] = gray;
+                            data[i + 2] = gray;
+                        }
+                        break;
+                    case 'sepia':
+                        for (let i = 0; i < len; i += 4) {
+                            let r = data[i],
+                                g = data[i + 1],
+                                b = data[i + 2];
+                            data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                            data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                            data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                        }
+                        break;
+                    case 'warm':
+                        for (let i = 0; i < len; i += 4) {
+                            data[i] = Math.min(255, data[i] + 30);
+                            data[i + 1] = Math.min(255, data[i + 1] + 10);
+                            data[i + 2] = Math.max(0, data[i + 2] - 10);
+                        }
+                        break;
+                    case 'cool':
+                        for (let i = 0; i < len; i += 4) {
+                            data[i] = Math.max(0, data[i] - 10);
+                            data[i + 1] = Math.min(255, data[i + 1] + 10);
+                            data[i + 2] = Math.min(255, data[i + 2] + 30);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                ctx.putImageData(imgData, 0, 0);
+                canvas.style.display = 'block';
+                video.style.display = 'none';
+            }
 
-      switch (filterName) {
-        case 'grayscale':
-          for (let i = 0; i < len; i += 4) {
-            const gray = 0.34 * data[i] + 0.5 * data[i+1] + 0.16 * data[i+2];
-            data[i] = gray; data[i+1] = gray; data[i+2] = gray;
-          }
-          break;
-        case 'sepia':
-          for (let i = 0; i < len; i += 4) {
-            let r = data[i], g = data[i+1], b = data[i+2];
-            data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-            data[i+1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-            data[i+2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
-          }
-          break;
-        case 'warm':
-          for (let i = 0; i < len; i += 4) {
-            data[i] = Math.min(255, data[i] + 30);
-            data[i+1] = Math.min(255, data[i+1] + 10);
-            data[i+2] = Math.max(0, data[i+2] - 10);
-          }
-          break;
-        case 'cool':
-          for (let i = 0; i < len; i += 4) {
-            data[i] = Math.max(0, data[i] - 10);
-            data[i+1] = Math.min(255, data[i+1] + 10);
-            data[i+2] = Math.min(255, data[i+2] + 30);
-          }
-          break;
-        default: break;
-      }
-      ctx.putImageData(imgData, 0, 0);
-      canvas.style.display = 'block';
-      video.style.display = 'none';
-    }
+            // ----- face effects (simulated with emojis on face) -----
+            function applyFaceEffect(effect) {
+                currentFaceEffect = effect;
+                statusMsg.textContent = `🎭 effect: ${effect || 'none'}`;
+            }
 
-    // ----- capture photo -----
-    function capturePhoto(mode = 'environment') {
-      if (!video.videoWidth) {
-        statusMsg.textContent = '⚠️ no camera feed · upload an image first';
-        return;
-      }
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      applyFilter(currentFilter);
-      photoTaken = true;
-      canvas.style.display = 'block';
-      video.style.display = 'none';
-      statusMsg.textContent = '✅ photo taken! add stickers, text & filters';
-    }
+            function startFaceTracking() {
+                if (animationId) cancelAnimationFrame(animationId);
 
-    // ----- upload image -----
-    function handleUpload(file) {
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          applyFilter(currentFilter);
-          photoTaken = true;
-          canvas.style.display = 'block';
-          video.style.display = 'none';
-          statusMsg.textContent = '🖼️ image uploaded · add stickers, text & filters';
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
+                function trackFace() {
+                    if (!video.videoWidth || photoTaken) {
+                        animationId = requestAnimationFrame(trackFace);
+                        return;
+                    }
 
-    // ----- clear photo (go back to camera) -----
-    function clearPhoto() {
-      if (stream) {
-        video.style.display = 'block';
-        canvas.style.display = 'none';
-        photoTaken = false;
-        imageData = null;
-        clearStickers();
-        clearAllText();
-        statusMsg.textContent = '📷 back to camera';
-        drawVideoToCanvas();
-      } else {
-        statusMsg.textContent = '📷 no camera, upload a photo';
-      }
-    }
+                    // Draw video to face filter canvas
+                    faceFilterCanvas.width = video.videoWidth;
+                    faceFilterCanvas.height = video.videoHeight;
+                    faceFilterCtx.drawImage(video, 0, 0, faceFilterCanvas.width, faceFilterCanvas.height);
 
-    // ----- stickers -----
-    function addSticker(emoji) {
-      const layer = stickerLayer;
-      const containerRect = layer.getBoundingClientRect();
-      const x = 10 + Math.random() * 60;
-      const y = 10 + Math.random() * 60;
-      const size = 55 + Math.random() * 25;
+                    // Apply face effect (simulated - draw emojis on face area)
+                    if (currentFaceEffect !== 'none') {
+                        const w = faceFilterCanvas.width;
+                        const h = faceFilterCanvas.height;
 
-      const img = document.createElement('img');
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = 120;
-      tempCanvas.height = 120;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.font = '90px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-      tempCtx.textAlign = 'center';
-      tempCtx.textBaseline = 'middle';
-      tempCtx.fillStyle = 'white';
-      tempCtx.shadowColor = 'rgba(0,0,0,0.5)';
-      tempCtx.shadowBlur = 14;
-      tempCtx.fillText(emoji, 60, 64);
-      img.src = tempCanvas.toDataURL();
-      img.style.width = size + 'px';
-      img.style.height = size + 'px';
-      img.style.left = x + '%';
-      img.style.top = y + '%';
-      img.draggable = true;
-      img.dataset.emoji = emoji;
+                        // Simulate face detection - draw effects in center area
+                        const centerX = w * 0.5;
+                        const centerY = h * 0.4;
+                        const faceSize = Math.min(w, h) * 0.4;
 
-      // drag (mouse + touch)
-      let isDragging = false;
-      let startX, startY, origLeft, origTop;
+                        faceFilterCtx.save();
 
-      const startDrag = (clientX, clientY) => {
-        const rect = img.getBoundingClientRect();
-        startX = clientX;
-        startY = clientY;
-        origLeft = parseFloat(img.style.left);
-        origTop = parseFloat(img.style.top);
-        img.style.cursor = 'grabbing';
-      };
+                        switch (currentFaceEffect) {
+                            case 'sunglasses':
+                                // Draw sunglasses
+                                faceFilterCtx.font = `${faceSize * 0.5}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                                faceFilterCtx.textAlign = 'center';
+                                faceFilterCtx.textBaseline = 'middle';
+                                faceFilterCtx.shadowColor = 'rgba(0,0,0,0.8)';
+                                faceFilterCtx.shadowBlur = 20;
+                                faceFilterCtx.fillText('😎', centerX, centerY - faceSize * 0.1);
+                                break;
+                            case 'mustache':
+                                faceFilterCtx.font = `${faceSize * 0.4}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                                faceFilterCtx.textAlign = 'center';
+                                faceFilterCtx.textBaseline = 'middle';
+                                faceFilterCtx.shadowColor = 'rgba(0,0,0,0.8)';
+                                faceFilterCtx.shadowBlur = 20;
+                                faceFilterCtx.fillText('🧔', centerX, centerY + faceSize * 0.25);
+                                break;
+                            case 'clown':
+                                faceFilterCtx.font = `${faceSize * 0.7}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                                faceFilterCtx.textAlign = 'center';
+                                faceFilterCtx.textBaseline = 'middle';
+                                faceFilterCtx.shadowColor = 'rgba(0,0,0,0.8)';
+                                faceFilterCtx.shadowBlur = 20;
+                                faceFilterCtx.fillText('🤡', centerX, centerY);
+                                break;
+                            case 'robot':
+                                faceFilterCtx.font = `${faceSize * 0.7}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                                faceFilterCtx.textAlign = 'center';
+                                faceFilterCtx.textBaseline = 'middle';
+                                faceFilterCtx.shadowColor = 'rgba(0,0,0,0.8)';
+                                faceFilterCtx.shadowBlur = 20;
+                                faceFilterCtx.fillText('🤖', centerX, centerY);
+                                break;
+                            default:
+                                break;
+                        }
+                        faceFilterCtx.restore();
+                    }
 
-      const moveDrag = (clientX, clientY) => {
-        if (!isDragging) return;
-        const dx = clientX - startX;
-        const dy = clientY - startY;
-        const parentRect = layer.getBoundingClientRect();
-        const newLeft = origLeft + (dx / parentRect.width) * 100;
-        const newTop = origTop + (dy / parentRect.height) * 100;
-        img.style.left = Math.min(90, Math.max(0, newLeft)) + '%';
-        img.style.top = Math.min(90, Math.max(0, newTop)) + '%';
-      };
+                    // Show face filter layer
+                    document.getElementById('faceFilterLayer').style.display = 'block';
 
-      const endDrag = () => {
-        isDragging = false;
-        img.style.cursor = 'grab';
-      };
+                    animationId = requestAnimationFrame(trackFace);
+                }
 
-      img.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        isDragging = true;
-        startDrag(e.clientX, e.clientY);
-        e.preventDefault();
-      });
+                trackFace();
+            }
 
-      window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
-      window.addEventListener('mouseup', endDrag);
+            // ----- capture photo -----
+            function capturePhoto(mode = 'environment') {
+                if (!video.videoWidth) {
+                    statusMsg.textContent = '⚠️ no camera feed · upload an image first';
+                    return;
+                }
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
 
-      img.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        if (!touch) return;
-        isDragging = true;
-        startDrag(touch.clientX, touch.clientY);
-        e.preventDefault();
-      }, { passive: false });
+                // Draw video with face effect applied
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      img.addEventListener('touchmove', (e) => {
-        const touch = e.touches[0];
-        if (!touch) return;
-        moveDrag(touch.clientX, touch.clientY);
-        e.preventDefault();
-      }, { passive: false });
+                // Draw face effect on top if active
+                if (currentFaceEffect !== 'none') {
+                    const w = canvas.width;
+                    const h = canvas.height;
+                    const centerX = w * 0.5;
+                    const centerY = h * 0.4;
+                    const faceSize = Math.min(w, h) * 0.4;
 
-      img.addEventListener('touchend', endDrag);
+                    ctx.save();
+                    ctx.font = `${faceSize * 0.6}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                    ctx.shadowBlur = 20;
 
-      layer.appendChild(img);
-      stickers.push({ emoji, element: img });
-      statusMsg.textContent = `✨ added ${emoji}`;
-    }
+                    switch (currentFaceEffect) {
+                        case 'sunglasses':
+                            ctx.fillText('😎', centerX, centerY - faceSize * 0.1);
+                            break;
+                        case 'mustache':
+                            ctx.fillText('🧔', centerX, centerY + faceSize * 0.25);
+                            break;
+                        case 'clown':
+                            ctx.fillText('🤡', centerX, centerY);
+                            break;
+                        case 'robot':
+                            ctx.fillText('🤖', centerX, centerY);
+                            break;
+                        default:
+                            break;
+                    }
+                    ctx.restore();
+                }
 
-    function clearStickers() {
-      stickerLayer.innerHTML = '';
-      stickers = [];
-      statusMsg.textContent = '🧹 stickers cleared';
-    }
+                imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                applyFilter(currentFilter);
+                photoTaken = true;
+                canvas.style.display = 'block';
+                video.style.display = 'none';
+                document.getElementById('faceFilterLayer').style.display = 'none';
+                statusMsg.textContent = '✅ photo taken! add stickers, text & filters';
+            }
 
-    // ----- text overlay -----
-    function addText(text) {
-      if (!text.trim()) {
-        statusMsg.textContent = '✏️ please write some text';
-        return;
-      }
-      const div = document.createElement('div');
-      div.textContent = text;
-      const x = 10 + Math.random() * 60;
-      const y = 10 + Math.random() * 60;
-      div.style.left = x + '%';
-      div.style.top = y + '%';
-      div.draggable = true;
+            // ----- upload image -----
+            function handleUpload(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        applyFilter(currentFilter);
+                        photoTaken = true;
+                        canvas.style.display = 'block';
+                        video.style.display = 'none';
+                        document.getElementById('faceFilterLayer').style.display = 'none';
+                        statusMsg.textContent = '🖼️ image uploaded · add stickers, text & filters';
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
 
-      // drag
-      let isDragging = false;
-      let startX, startY, origLeft, origTop;
+            // ----- clear photo -----
+            function clearPhoto() {
+                if (stream) {
+                    video.style.display = 'block';
+                    canvas.style.display = 'none';
+                    document.getElementById('faceFilterLayer').style.display = 'block';
+                    photoTaken = false;
+                    imageData = null;
+                    clearStickers();
+                    clearAllText();
+                    statusMsg.textContent = '📷 back to camera';
+                    drawVideoToCanvas();
+                    startFaceTracking();
+                } else {
+                    statusMsg.textContent = '📷 no camera, upload a photo';
+                }
+            }
 
-      const startDrag = (clientX, clientY) => {
-        const rect = div.getBoundingClientRect();
-        startX = clientX;
-        startY = clientY;
-        origLeft = parseFloat(div.style.left);
-        origTop = parseFloat(div.style.top);
-        div.style.cursor = 'grabbing';
-      };
+            // ----- stickers -----
+            function addSticker(emoji) {
+                const layer = stickerLayer;
+                const x = 10 + Math.random() * 60;
+                const y = 10 + Math.random() * 60;
+                const size = 55 + Math.random() * 25;
 
-      const moveDrag = (clientX, clientY) => {
-        if (!isDragging) return;
-        const dx = clientX - startX;
-        const dy = clientY - startY;
-        const parentRect = textOverlay.getBoundingClientRect();
-        const newLeft = origLeft + (dx / parentRect.width) * 100;
-        const newTop = origTop + (dy / parentRect.height) * 100;
-        div.style.left = Math.min(90, Math.max(0, newLeft)) + '%';
-        div.style.top = Math.min(90, Math.max(0, newTop)) + '%';
-      };
+                const img = document.createElement('img');
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = 120;
+                tempCanvas.height = 120;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.font = '90px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                tempCtx.fillStyle = 'white';
+                tempCtx.shadowColor = 'rgba(0,0,0,0.5)';
+                tempCtx.shadowBlur = 14;
+                tempCtx.fillText(emoji, 60, 64);
+                img.src = tempCanvas.toDataURL();
+                img.style.width = size + 'px';
+                img.style.height = size + 'px';
+                img.style.left = x + '%';
+                img.style.top = y + '%';
+                img.draggable = true;
+                img.dataset.emoji = emoji;
 
-      const endDrag = () => {
-        isDragging = false;
-        div.style.cursor = 'grab';
-      };
+                // drag (mouse + touch)
+                let isDragging = false;
+                let startX, startY, origLeft, origTop;
 
-      div.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        isDragging = true;
-        startDrag(e.clientX, e.clientY);
-        e.preventDefault();
-      });
+                const startDrag = (clientX, clientY) => {
+                    const rect = img.getBoundingClientRect();
+                    startX = clientX;
+                    startY = clientY;
+                    origLeft = parseFloat(img.style.left);
+                    origTop = parseFloat(img.style.top);
+                    img.style.cursor = 'grabbing';
+                };
 
-      window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
-      window.addEventListener('mouseup', endDrag);
+                const moveDrag = (clientX, clientY) => {
+                    if (!isDragging) return;
+                    const dx = clientX - startX;
+                    const dy = clientY - startY;
+                    const parentRect = layer.getBoundingClientRect();
+                    const newLeft = origLeft + (dx / parentRect.width) * 100;
+                    const newTop = origTop + (dy / parentRect.height) * 100;
+                    img.style.left = Math.min(90, Math.max(0, newLeft)) + '%';
+                    img.style.top = Math.min(90, Math.max(0, newTop)) + '%';
+                };
 
-      div.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        if (!touch) return;
-        isDragging = true;
-        startDrag(touch.clientX, touch.clientY);
-        e.preventDefault();
-      }, { passive: false });
+                const endDrag = () => {
+                    isDragging = false;
+                    img.style.cursor = 'grab';
+                };
 
-      div.addEventListener('touchmove', (e) => {
-        const touch = e.touches[0];
-        if (!touch) return;
-        moveDrag(touch.clientX, touch.clientY);
-        e.preventDefault();
-      }, { passive: false });
+                img.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0) return;
+                    isDragging = true;
+                    startDrag(e.clientX, e.clientY);
+                    e.preventDefault();
+                });
 
-      div.addEventListener('touchend', endDrag);
+                window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+                window.addEventListener('mouseup', endDrag);
 
-      textOverlay.appendChild(div);
-      textElements.push(div);
-      statusMsg.textContent = `✏️ added "${text}"`;
-      textInput.value = '';
-    }
+                img.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    if (!touch) return;
+                    isDragging = true;
+                    startDrag(touch.clientX, touch.clientY);
+                    e.preventDefault();
+                }, { passive: false });
 
-    function clearAllText() {
-      textOverlay.innerHTML = '';
-      textElements = [];
-      statusMsg.textContent = '🗑️ text cleared';
-    }
+                img.addEventListener('touchmove', (e) => {
+                    const touch = e.touches[0];
+                    if (!touch) return;
+                    moveDrag(touch.clientX, touch.clientY);
+                    e.preventDefault();
+                }, { passive: false });
 
-    // ----- save photo (download) -----
-    function savePhoto() {
-      // combine canvas + stickers + text into one image
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d');
-      const w = canvas.width || 640;
-      const h = canvas.height || 480;
-      tempCanvas.width = w;
-      tempCanvas.height = h;
+                img.addEventListener('touchend', endDrag);
 
-      // draw canvas content (photo with filter)
-      tempCtx.drawImage(canvas, 0, 0, w, h);
+                layer.appendChild(img);
+                stickers.push({ emoji, element: img });
+                statusMsg.textContent = `✨ added ${emoji}`;
+            }
 
-      // draw stickers
-      const stickerImgs = stickerLayer.querySelectorAll('img');
-      stickerImgs.forEach(img => {
-        const rect = img.getBoundingClientRect();
-        const parentRect = stickerLayer.getBoundingClientRect();
-        const x = (rect.left - parentRect.left) / parentRect.width * w;
-        const y = (rect.top - parentRect.top) / parentRect.height * h;
-        const size = rect.width / parentRect.width * w;
-        tempCtx.drawImage(img, x, y, size, size);
-      });
+            function clearStickers() {
+                stickerLayer.innerHTML = '';
+                stickers = [];
+                statusMsg.textContent = '🧹 stickers cleared';
+            }
 
-      // draw text
-      const textDivs = textOverlay.querySelectorAll('div');
-      textDivs.forEach(div => {
-        const rect = div.getBoundingClientRect();
-        const parentRect = textOverlay.getBoundingClientRect();
-        const x = (rect.left - parentRect.left) / parentRect.width * w;
-        const y = (rect.top - parentRect.top) / parentRect.height * h;
-        const fontSize = parseFloat(window.getComputedStyle(div).fontSize) || 28;
-        const scaledSize = (fontSize / parentRect.height) * h;
-        tempCtx.font = `bold ${scaledSize}px "Segoe UI", "Quicksand", sans-serif`;
-        tempCtx.textAlign = 'left';
-        tempCtx.textBaseline = 'top';
-        tempCtx.shadowColor = 'rgba(0,0,0,0.8)';
-        tempCtx.shadowBlur = 12;
-        tempCtx.fillStyle = 'white';
-        tempCtx.fillText(div.textContent, x, y);
-      });
+            // ----- text overlay -----
+            function addText(text) {
+                if (!text.trim()) {
+                    statusMsg.textContent = '✏️ please write some text';
+                    return;
+                }
+                const div = document.createElement('div');
+                div.textContent = text;
+                const x = 10 + Math.random() * 60;
+                const y = 10 + Math.random() * 60;
+                div.style.left = x + '%';
+                div.style.top = y + '%';
+                div.draggable = true;
 
-      // download
-      const link = document.createElement('a');
-      link.download = `photobooth_${Date.now()}.png`;
-      link.href = tempCanvas.toDataURL('image/png');
-      link.click();
-      statusMsg.textContent = '💾 photo saved!';
-    }
+                let isDragging = false;
+                let startX, startY, origLeft, origTop;
 
-    // ----- UI helpers -----
-    function setActiveFilter(filterName) {
-      filterBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === filterName);
-      });
-      currentFilter = filterName;
-      if (imageData) {
-        applyFilter(filterName);
-      } else if (video.videoWidth) {
-        drawVideoToCanvas();
-      }
-      statusMsg.textContent = `🎨 filter: ${filterName}`;
-    }
+                const startDrag = (clientX, clientY) => {
+                    const rect = div.getBoundingClientRect();
+                    startX = clientX;
+                    startY = clientY;
+                    origLeft = parseFloat(div.style.left);
+                    origTop = parseFloat(div.style.top);
+                    div.style.cursor = 'grabbing';
+                };
 
-    // ----- event bindings -----
-    captureBtn.addEventListener('click', () => capturePhoto('environment'));
-    selfieBtn.addEventListener('click', () => {
-      facingMode = 'user';
-      initCamera('user');
-      setTimeout(() => capturePhoto('user'), 300);
-    });
+                const moveDrag = (clientX, clientY) => {
+                    if (!isDragging) return;
+                    const dx = clientX - startX;
+                    const dy = clientY - startY;
+                    const parentRect = textOverlay.getBoundingClientRect();
+                    const newLeft = origLeft + (dx / parentRect.width) * 100;
+                    const newTop = origTop + (dy / parentRect.height) * 100;
+                    div.style.left = Math.min(90, Math.max(0, newLeft)) + '%';
+                    div.style.top = Math.min(90, Math.max(0, newTop)) + '%';
+                };
 
-    uploadInput.addEventListener('change', (e) => {
-      if (e.target.files.length) {
-        handleUpload(e.target.files[0]);
-      }
-      uploadInput.value = '';
-    });
+                const endDrag = () => {
+                    isDragging = false;
+                    div.style.cursor = 'grab';
+                };
 
-    clearPhotoBtn.addEventListener('click', clearPhoto);
+                div.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0) return;
+                    isDragging = true;
+                    startDrag(e.clientX, e.clientY);
+                    e.preventDefault();
+                });
 
-    saveBtn.addEventListener('click', savePhoto);
+                window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+                window.addEventListener('mouseup', endDrag);
 
-    filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => setActiveFilter(btn.dataset.filter));
-    });
+                div.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    if (!touch) return;
+                    isDragging = true;
+                    startDrag(touch.clientX, touch.clientY);
+                    e.preventDefault();
+                }, { passive: false });
 
-    stickerSpans.forEach(span => {
-      span.addEventListener('click', () => {
-        const emoji = span.dataset.sticker;
-        if (emoji) addSticker(emoji);
-      });
-    });
+                div.addEventListener('touchmove', (e) => {
+                    const touch = e.touches[0];
+                    if (!touch) return;
+                    moveDrag(touch.clientX, touch.clientY);
+                    e.preventDefault();
+                }, { passive: false });
 
-    addTextBtn.addEventListener('click', () => {
-      addText(textInput.value);
-    });
+                div.addEventListener('touchend', endDrag);
 
-    textInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        addText(textInput.value);
-      }
-    });
+                textOverlay.appendChild(div);
+                textElements.push(div);
+                statusMsg.textContent = `✏️ added "${text}"`;
+                textInput.value = '';
+            }
 
-    clearTextBtn.addEventListener('click', clearAllText);
+            function clearAllText() {
+                textOverlay.innerHTML = '';
+                textElements = [];
+                statusMsg.textContent = '🗑️ text cleared';
+            }
 
-    // start with environment camera
-    initCamera('environment');
+            // ----- save photo -----
+            function savePhoto() {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                const w = canvas.width || 640;
+                const h = canvas.height || 480;
+                tempCanvas.width = w;
+                tempCanvas.height = h;
 
-    // helper: draw video periodically if no photo
-    function loop() {
-      if (!photoTaken && video.videoWidth && canvas.style.display === 'none') {
-        drawVideoToCanvas();
-        canvas.style.display = 'none';
-        video.style.display = 'block';
-      }
-      requestAnimationFrame(loop);
-    }
-    loop();
+                tempCtx.drawImage(canvas, 0, 0, w, h);
 
-  })();
-</script>
+                // draw stickers
+                const stickerImgs = stickerLayer.querySelectorAll('img');
+                stickerImgs.forEach(img => {
+                    const rect = img.getBoundingClientRect();
+                    const parentRect = stickerLayer.getBoundingClientRect();
+                    const x = (rect.left - parentRect.left) / parentRect.width * w;
+                    const y = (rect.top - parentRect.top) / parentRect.height * h;
+                    const size = rect.width / parentRect.width * w;
+                    tempCtx.drawImage(img, x, y, size, size);
+                });
+
+                // draw text
+                const textDivs = textOverlay.querySelectorAll('div');
+                textDivs.forEach(div => {
+                    const rect = div.getBoundingClientRect();
+                    const parentRect = textOverlay.getBoundingClientRect();
+                    const x = (rect.left - parentRect.left) / parentRect.width * w;
+                    const y = (rect.top - parentRect.top) / parentRect.height * h;
+                    const fontSize = parseFloat(window.getComputedStyle(div).fontSize) || 28;
+                    const scaledSize = (fontSize / parentRect.height) * h;
+                    tempCtx.font = `bold ${scaledSize}px "Segoe UI", "Quicksand", sans-serif`;
+                    tempCtx.textAlign = 'left';
+                    tempCtx.textBaseline = 'top';
+                    tempCtx.shadowColor = 'rgba(0,0,0,0.8)';
+                    tempCtx.shadowBlur = 12;
+                    tempCtx.fillStyle = 'white';
+                    tempCtx.fillText(div.textContent, x, y);
+                });
+
+                const link = document.createElement('a');
+                link.download = `face_studio_${Date.now()}.png`;
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+                statusMsg.textContent = '💾 photo saved!';
+            }
+
+            // ----- UI helpers -----
+            function setActiveFilter(filterName) {
+                filterBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.filter === filterName);
+                });
+                currentFilter = filterName;
+                if (imageData) {
+                    applyFilter(filterName);
+                } else if (video.videoWidth) {
+                    drawVideoToCanvas();
+                }
+                statusMsg.textContent = `🎨 filter: ${filterName}`;
+            }
+
+            // ----- event bindings -----
+            captureBtn.addEventListener('click', () => capturePhoto('environment'));
+            selfieBtn.addEventListener('click', () => {
+                facingMode = 'user';
+                initCamera('user');
+                setTimeout(() => capturePhoto('user'), 400);
+            });
+
+            uploadInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleUpload(e.target.files[0]);
+                }
+                uploadInput.value = '';
+            });
+
+            clearPhotoBtn.addEventListener('click', clearPhoto);
+            saveBtn.addEventListener('click', savePhoto);
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => setActiveFilter(btn.dataset.filter));
+            });
+
+            stickerSpans.forEach(span => {
+                span.addEventListener('click', () => {
+                    const emoji = span.dataset.sticker;
+                    if (emoji) addSticker(emoji);
+                });
+            });
+
+            addTextBtn.addEventListener('click', () => {
+                addText(textInput.value);
+            });
+
+            textInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    addText(textInput.value);
+                }
+            });
+
+            clearTextBtn.addEventListener('click', clearAllText);
+
+            faceEffectBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    faceEffectBtns.forEach(b => {
+                        b.style.background = '#524138';
+                        b.style.borderColor = '#6b5a4c';
+                    });
+                    btn.style.background = '#b5855a';
+                    btn.style.borderColor = '#dbaa7a';
+                    applyFaceEffect(btn.dataset.effect);
+                });
+            });
+
+            // start with environment camera
+            initCamera('environment');
+
+            // helper: draw video periodically if no photo
+            function loop() {
+                if (!photoTaken && video.videoWidth && canvas.style.display === 'none') {
+                    drawVideoToCanvas();
+                    canvas.style.display = 'none';
+                    video.style.display = 'block';
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+
+            // apply default face effect highlight
+            document.querySelector('.face-effect-btn[data-effect="none"]').style.background = '#b5855a';
+            document.querySelector('.face-effect-btn[data-effect="none"]').style.borderColor = '#dbaa7a';
+
+        })();
+    </script>
 </body>
 </html>
